@@ -1,0 +1,88 @@
+---
+title: "Shiny App for Country Maps and Flags"
+author: "Vitor Dantas"
+date: "7/23/2019"
+output: ioslides_presentation
+---
+
+## Country Maps and Flags!
+
+This Shiny app written in R and hosted at shinyapps.io lets you choose
+a country to:
+
+- See where it is located in the world
+- Check out the looks of its flag!
+- Browse the interactive map
+
+## Under the hood
+
+A simple app, but powerful because it stands on the shoulders of libraries:
+
+- Shiny
+- Leaflet
+- jsonlite
+- The REST Countries API
+
+## Sample results (1/2)
+
+```{r echo=FALSE,message=FALSE}
+library(dplyr)
+library(jsonlite)
+library(leaflet)
+```
+
+```{r echo=FALSE,cache=TRUE}
+jsonCountryData <- fromJSON("https://restcountries.eu/rest/v2/all")
+```
+
+```{r echo=FALSE}
+countryData <- jsonCountryData %>%
+    filter(sapply(jsonCountryData$latlng, length) == 2) %>%
+    transmute(name,
+              alpha2Code,
+              flag,
+              lat = sapply(latlng, "[[", 1),
+              lng = sapply(latlng, "[[", 2))
+```
+
+For a little demonstration, here is the expected result result when you select "Brazil"!
+
+```{r echo=FALSE,message=FALSE,fig.width=6,fig.height=3}
+selectedCountryRow <- countryData[countryData$name == "Brazil", ]
+
+countryData %>%
+    leaflet() %>%
+    addTiles() %>%
+    addMarkers(icon = makeIcon(iconUrl = countryData$flag,
+                               iconWidth = 40,
+                               iconHeight = 20),
+               clusterOptions = markerClusterOptions(maxClusterRadius = 40,
+                                                     showCoverageOnHover = FALSE)) %>%
+    setView(lng = selectedCountryRow$lng,
+                    lat = selectedCountryRow$lat,
+                    zoom = 4)
+```
+
+## Sample results (2/2)
+
+And that's what you get if you select "India".
+
+```{r echo=FALSE,message=FALSE,fig.width=6,fig.height=3}
+selectedCountryRow <- countryData[countryData$name == "India", ]
+
+countryData %>%
+    leaflet() %>%
+    addTiles() %>%
+    addMarkers(icon = makeIcon(iconUrl = countryData$flag,
+                               iconWidth = 40,
+                               iconHeight = 20),
+               clusterOptions = markerClusterOptions(maxClusterRadius = 40,
+                                                     showCoverageOnHover = FALSE)) %>%
+    setView(lng = selectedCountryRow$lng,
+                    lat = selectedCountryRow$lat,
+                    zoom = 4)
+```
+
+Enjoy the app!
+
+https://vitorcd.shinyapps.io/developing-data-products-course-project/
